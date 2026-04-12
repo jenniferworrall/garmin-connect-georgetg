@@ -20,6 +20,7 @@ import {
     IGarminTokens,
     IOauth1Token,
     IOauth2Token,
+    ISocialConnections,
     ISocialProfile,
     IUserSettings,
     IWorkout,
@@ -716,6 +717,26 @@ export default class GarminConnect {
             this.url.UNLINK_GEAR(gearUuid, activityId),
             {}
         );
+    }
+
+    // ─── Social / Device Methods ─────────────────────────────────
+
+    async getSocialConnections(): Promise<ISocialConnections> {
+        const displayName = await this.getDisplayName();
+        return this.client.get<ISocialConnections>(
+            this.url.SOCIAL_CONNECTIONS(displayName)
+        );
+    }
+
+    async getDeviceInfo(): Promise<any[]> {
+        const displayName = await this.getDisplayName();
+        return this.client.get<any[]>(this.url.DEVICE_INFO(displayName));
+    }
+
+    async getNewsFeed(start?: number, limit?: number): Promise<any[]> {
+        return this.client.get<any[]>(this.url.NEWS_FEED, {
+            params: { start, limit }
+        });
     }
 
     // ─── Generic Methods ─────────────────────────────────────────

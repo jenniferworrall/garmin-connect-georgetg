@@ -36,6 +36,15 @@ export class UrlClass {
     get USER_PROFILE() {
         return `${this.GC_API}/userprofile-service/socialProfile`;
     }
+    SOCIAL_CONNECTIONS(displayName: string) {
+        return `${this.GC_API}/userprofile-service/socialProfile/connections/${displayName}`;
+    }
+    DEVICE_INFO(displayName: string) {
+        return `${this.GC_API}/device-service/deviceservice/device-info/all/${displayName}`;
+    }
+    get NEWS_FEED() {
+        return `${this.GC_API}/activitylist-service/activities/subscriptionFeed`;
+    }
     get ACTIVITIES() {
         return `${this.GC_API}/activitylist-service/activities/search/activities`;
     }
