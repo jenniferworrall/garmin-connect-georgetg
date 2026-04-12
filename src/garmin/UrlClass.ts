@@ -42,6 +42,12 @@ export class UrlClass {
     get ACTIVITY() {
         return `${this.GC_API}/activity-service/activity/`;
     }
+    ACTIVITY_IMAGE(activityId: GCActivityId) {
+        return `${this.GC_API}/activity-service/activity/${activityId}/image`;
+    }
+    ACTIVITY_IMAGE_DELETE(activityId: GCActivityId, imageId: string) {
+        return `${this.GC_API}/activity-service/activity/${activityId}/image/${imageId}`;
+    }
     get STAT_ACTIVITIES() {
         return `${this.GC_API}/fitnessstats-service/activity`;
     }

@@ -290,6 +290,37 @@ export default class GarminConnect {
         await this.client.delete<void>(this.url.ACTIVITY + activity.activityId);
     }
 
+    async uploadImage(
+        activity: { activityId: GCActivityId },
+        file: string
+    ): Promise<any> {
+        if (!activity.activityId) throw new Error('Missing activityId');
+        const fileBuffer = fs.readFileSync(file);
+        const form = new FormData();
+        form.append('file', fileBuffer, {
+            filename: path.basename(file)
+        });
+        return this.client.post(
+            this.url.ACTIVITY_IMAGE(activity.activityId),
+            form,
+            {
+                headers: {
+                    'Content-Type': form.getHeaders()['content-type']
+                }
+            }
+        );
+    }
+
+    async deleteImage(
+        activity: { activityId: GCActivityId },
+        imageId: string
+    ): Promise<void> {
+        if (!activity.activityId) throw new Error('Missing activityId');
+        await this.client.delete<void>(
+            this.url.ACTIVITY_IMAGE_DELETE(activity.activityId, imageId)
+        );
+    }
+
     async getWorkouts(start: number, limit: number): Promise<IWorkout[]> {
         return this.client.get<IWorkout[]>(this.url.WORKOUTS, {
             params: {
