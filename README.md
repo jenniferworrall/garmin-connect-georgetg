@@ -148,36 +148,32 @@ There's currently no way of removing listeners.
 
 ## Reading data
 
-### User info is not implemented yet. // TODO: Implement this function
+### `getSocialConnections(): Promise<ISocialConnections>`
 
-Receive basic user information
-
-```js
-GCClient.getUserInfo();
-```
-
-### Social Profile is not implemented yet. // TODO: Implement this function
-
-Receive social user information
+Get a list of all social connections.
 
 ```js
-GCClient.getSocialProfile();
+const connections = await GCClient.getSocialConnections();
+console.log(connections.userConnections);
 ```
 
-### Social Connections is not implemented yet. // TODO: Implement this function
-
-Get a list of all social connections
-
-```js
-GCClient.getSocialConnections();
-```
-
-### Device info is not implemented yet. // TODO: Implement this function
+### `getDeviceInfo(): Promise<any[]>`
 
 Get a list of all registered devices including model numbers and firmware versions.
 
 ```js
-GCClient.getDeviceInfo();
+const devices = await GCClient.getDeviceInfo();
+```
+
+### `getNewsFeed(start?: number, limit?: number): Promise<any[]>`
+
+Get a list of activities in your news feed.
+
+```js
+// Get the news feed with default length
+const feed = await GCClient.getNewsFeed();
+// Get activities in feed, 10 through 15
+const feedPage = await GCClient.getNewsFeed(10, 5);
 ```
 
 ### `getActivities(start: number, limit: number, activityType?: ActivityType, subActivityType?: ActivitySubType): Promise<IActivity[]>`
@@ -226,17 +222,6 @@ Retrieves details for a specific activity based on the provided `activityId`.
 const activityDetails = await GCClient.getActivity({
     activityId: 'exampleActivityId'
 });
-```
-
-### News Feed is not implemented yet. // TODO: Implement this function
-
-To get a list of activities in your news feed, use the `getNewsFeed` method. This function takes two arguments, _start_ and _limit_, which is used for pagination. Both are optional and will default to whatever Garmin Connect is using. To be sure to get all activities, use this correctly.
-
-```js
-// Get the news feed with a default length with most recent activities
-GCClient.getNewsFeed();
-// Get activities in feed, 10 through 15. (start 10, limit 5)
-GCClient.getNewsFeed(10, 5);
 ```
 
 ### Download original activity data

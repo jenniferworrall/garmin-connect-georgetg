@@ -17,6 +17,7 @@ import {
     IGarminTokens,
     IOauth1Token,
     IOauth2Token,
+    ISocialConnections,
     ISocialProfile,
     IUserSettings,
     IWorkout,
@@ -96,6 +97,14 @@ export default class GarminConnect {
         );
         return this;
     }
+
+    async getDisplayName(): Promise<string> {
+        if (this._userHash) return this._userHash;
+        const profile = await this.getUserProfile();
+        this._userHash = profile.displayName;
+        return this._userHash;
+    }
+
     exportTokenToFile(dirPath: string): void {
         if (!checkIsDirectory(dirPath)) {
             createDirectory(dirPath);
@@ -533,6 +542,24 @@ export default class GarminConnect {
         } catch (error: any) {
             throw new Error(`Error in getHeartRate: ${error.message}`);
         }
+    }
+
+    async getSocialConnections(): Promise<ISocialConnections> {
+        const displayName = await this.getDisplayName();
+        return this.client.get<ISocialConnections>(
+            this.url.SOCIAL_CONNECTIONS(displayName)
+        );
+    }
+
+    async getDeviceInfo(): Promise<any[]> {
+        const displayName = await this.getDisplayName();
+        return this.client.get<any[]>(this.url.DEVICE_INFO(displayName));
+    }
+
+    async getNewsFeed(start?: number, limit?: number): Promise<any[]> {
+        return this.client.get<any[]>(this.url.NEWS_FEED, {
+            params: { start, limit }
+        });
     }
 
     async get<T>(url: string, data?: any) {
