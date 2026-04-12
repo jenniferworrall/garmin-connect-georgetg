@@ -476,7 +476,9 @@ const heartRateData = await GCClient.getHeartRate(new Date('2020-03-24'));
 
 ## Modifying data
 
-### Update activity is not implemented yet. // TODO: Implement this function
+### `updateActivity(activity: IActivity): Promise<IActivity>`
+
+Updates an existing activity.
 
 ```js
 const activities = await GCClient.getActivities(0, 1);

@@ -255,6 +255,14 @@ export default class GarminConnect {
         await this.client.delete<void>(this.url.ACTIVITY + activity.activityId);
     }
 
+    async updateActivity(activity: IActivity): Promise<IActivity> {
+        if (!activity.activityId) throw new Error('Missing activityId');
+        return this.client.put<IActivity>(
+            this.url.ACTIVITY + activity.activityId,
+            activity
+        );
+    }
+
     async getWorkouts(start: number, limit: number): Promise<IWorkout[]> {
         return this.client.get<IWorkout[]>(this.url.WORKOUTS, {
             params: {
@@ -319,6 +327,17 @@ export default class GarminConnect {
     async deleteWorkout(workout: { workoutId: string }) {
         if (!workout.workoutId) throw new Error('Missing workout');
         return this.client.delete(this.url.WORKOUT(workout.workoutId));
+    }
+
+    async scheduleWorkout(
+        workout: { workoutId: string },
+        date: Date
+    ): Promise<void> {
+        if (!workout.workoutId) throw new Error('Missing workoutId');
+        const dateString = toDateString(date);
+        await this.client.post(this.url.SCHEDULE_WORKOUT(workout.workoutId), {
+            date: dateString
+        });
     }
 
     async getSteps(date = new Date()): Promise<number> {

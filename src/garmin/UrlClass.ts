@@ -98,4 +98,7 @@ export class UrlClass {
     get WORKOUTS() {
         return `${this.GC_API}/workout-service/workouts`;
     }
+    SCHEDULE_WORKOUT(workoutId: GCWorkoutId) {
+        return `${this.GC_API}/workout-service/schedule/${workoutId}`;
+    }
 }
