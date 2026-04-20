@@ -300,12 +300,14 @@ export class HttpClient {
             redirectAfterAccountCreationUrl: this.url.GARMIN_SSO_EMBED
         };
         const step3Url = `${this.url.SIGNIN_URL}?${qs.stringify(signinParams)}`;
-        // console.log('login - step3Url:', step3Url);
+        console.log('login - step3Url:', step3Url);
         const step3Form = new FormData();
         step3Form.append('username', username);
         step3Form.append('password', password);
         step3Form.append('embed', 'true');
         step3Form.append('_csrf', csrf_token);
+
+        console.log('Step 3 form', step3Form);
         const step3Result = await this.post<string>(step3Url, step3Form, {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -315,7 +317,7 @@ export class HttpClient {
                 'User-Agent': USER_AGENT_BROWSER
             }
         });
-        console.log('step3Result:', step3Result);
+        //console.log('step3Result:', step3Result);
         this.handleAccountLocked(step3Result);
         this.handlePageTitle(step3Result);
         this.handleMFA(step3Result);
@@ -331,7 +333,7 @@ export class HttpClient {
     }
 
     handleMFA(htmlStr: string): void {
-        console.log('Handle MFA', htmlStr);
+        //console.log('Handle MFA', htmlStr);
         // Detect MFA challenge page — Garmin shows a page with "Verify Your Identity"
         // or "Enter MFA Code" when 2FA is enabled
         if (
