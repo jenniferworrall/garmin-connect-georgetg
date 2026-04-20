@@ -315,7 +315,7 @@ export class HttpClient {
                 'User-Agent': USER_AGENT_BROWSER
             }
         });
-        // console.log('step3Result:', step3Result)
+        console.log('step3Result:', step3Result);
         this.handleAccountLocked(step3Result);
         this.handlePageTitle(step3Result);
         this.handleMFA(step3Result);
@@ -331,6 +331,7 @@ export class HttpClient {
     }
 
     handleMFA(htmlStr: string): void {
+        console.log('Handle MFA', htmlStr);
         // Detect MFA challenge page — Garmin shows a page with "Verify Your Identity"
         // or "Enter MFA Code" when 2FA is enabled
         if (
@@ -349,6 +350,7 @@ export class HttpClient {
             };
 
             throw new GarminMfaRequiredError(this._mfaLoginState);
+        } else {
         }
     }
 
