@@ -308,16 +308,19 @@ export class HttpClient {
         step3Form.append('_csrf', csrf_token);
 
         console.log('Step 3 form', step3Form);
+
+        const headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Dnt: 1,
+            Origin: this.url.GARMIN_SSO_ORIGIN,
+            Referer: this.url.SIGNIN_URL,
+            'User-Agent': USER_AGENT_BROWSER
+        };
+        console.log('Headers', headers);
         const step3Result = await this.post<string>(step3Url, step3Form, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Dnt: 1,
-                Origin: this.url.GARMIN_SSO_ORIGIN,
-                Referer: this.url.SIGNIN_URL,
-                'User-Agent': USER_AGENT_BROWSER
-            }
+            headers
         });
-        //console.log('step3Result:', step3Result);
+        console.log('step3Result:', step3Result);
         this.handleAccountLocked(step3Result);
         this.handlePageTitle(step3Result);
         this.handleMFA(step3Result);
