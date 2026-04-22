@@ -266,7 +266,7 @@ export class HttpClient {
         const step1Url = `${this.url.GARMIN_SSO_EMBED}?${qs.stringify(
             step1Params
         )}`;
-        // console.log('login - step1Url:', step1Url);
+        console.log('login - step1Url:', step1Url);
         await this.client.get(step1Url);
 
         // Step2 Get _csrf
@@ -277,9 +277,9 @@ export class HttpClient {
             gauthHost: this.url.GARMIN_SSO_EMBED
         };
         const step2Url = `${this.url.SIGNIN_URL}?${qs.stringify(step2Params)}`;
-        // console.log('login - step2Url:', step2Url);
+        console.log('login - step2Url:', step2Url);
         const step2Result = await this.get<string>(step2Url);
-        // console.log('login - step2Result:', step2Result)
+        console.log('login - step2Result:', step2Result);
         const csrfRegResult = CSRF_RE.exec(step2Result);
         if (!csrfRegResult) {
             throw new Error('login - csrf not found');
