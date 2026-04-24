@@ -4,6 +4,9 @@ import axios, {
     AxiosResponse,
     RawAxiosRequestHeaders
 } from 'axios';
+import { wrapper } from 'axios-cookiejar-support';
+import { CookieJar } from 'tough-cookie';
+
 import FormData from 'form-data';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -95,7 +98,8 @@ export class HttpClient {
 
     constructor(url: UrlClass) {
         this.url = url;
-        this.client = axios.create();
+        const jar = new CookieJar();
+        this.client = wrapper(axios.create({ jar }));
         this.client.interceptors.response.use(
             (response) => response,
             async (error) => {
@@ -375,7 +379,7 @@ export class HttpClient {
     }
 
     handleMFA(htmlStr: string): void {
-        //console.log('Handle MFA', htmlStr);
+        console.log('Handle MFA', htmlStr);
         // Detect MFA challenge page — Garmin shows a page with "Verify Your Identity"
         // or "Enter MFA Code" when 2FA is enabled
         if (
