@@ -47,6 +47,7 @@ import {
     GCActivityId,
     IActivity
 } from './types/activity';
+import { IActivityExerciseSets } from './types/exerciseSet';
 import {
     IUserSummary,
     IBodyCompositionData,
@@ -210,14 +211,21 @@ export default class GarminConnect {
     }
 
     /**
-     * Strength training: exercise sets (reps, weight, muscle category,
-     * probable/detected exercise). Shape is returned as `unknown` until
-     * we finalize the typed interface — capture a real response with
-     * GARMIN_DEBUG=1 to inform the types.
+     * Strength training per-set detail: repetitions, weight, ML-detected
+     * exercise category / name, and candidate predictions with probabilities.
+     *
+     * Each element of `exerciseSets` represents either a working set
+     * (`setType === 'ACTIVE'`) or a rest period (`setType === 'REST'`).
+     * The first entry of `exercises[]` is the detected movement — the rest
+     * are lower-probability candidates returned by Garmin's on-device ML.
+     *
+     * @see {@link IActivityExerciseSets}
      */
-    async getActivityExerciseSets(activityId: GCActivityId): Promise<unknown> {
+    async getActivityExerciseSets(
+        activityId: GCActivityId
+    ): Promise<IActivityExerciseSets> {
         if (!activityId) throw new Error('Missing activityId');
-        return this.client.get<unknown>(
+        return this.client.get<IActivityExerciseSets>(
             this.url.ACTIVITY_EXERCISE_SETS(activityId)
         );
     }

@@ -375,7 +375,8 @@ export class HttpClient {
         if (
             htmlStr.includes('verifyMFA') ||
             htmlStr.includes('setupEnterMfaCode') ||
-            htmlStr.includes('mfa-code')
+            htmlStr.includes('mfa-code') ||
+            htmlStr.includes('Enter security code')
         ) {
             // Extract CSRF token from MFA page
             const csrfMatch = CSRF_RE.exec(htmlStr);

@@ -1,0 +1,27 @@
+{
+    "permissions": {
+        "allow": [
+            "mcp__bigbrain__memory_probe",
+            "mcp__bigbrain__memory_read",
+            "Bash(cp \"C:/Users/George/Documents/Projects/Eunoia/packages/garmin-connect/src/common/HttpClient.ts\" \"C:/Users/George/Documents/GitHub/garmin-connect/src/common/HttpClient.ts\")",
+            "Bash(cp \"C:/Users/George/Documents/Projects/Eunoia/packages/garmin-connect/src/garmin/UrlClass.ts\" \"C:/Users/George/Documents/GitHub/garmin-connect/src/garmin/UrlClass.ts\")",
+            "Bash(cp \"C:/Users/George/Documents/Projects/Eunoia/packages/garmin-connect/src/garmin/GarminConnect.ts\" \"C:/Users/George/Documents/GitHub/garmin-connect/src/garmin/GarminConnect.ts\")",
+            "Bash(cp \"C:/Users/George/Documents/Projects/Eunoia/packages/garmin-connect/src/garmin/types/wellness.ts\" \"C:/Users/George/Documents/GitHub/garmin-connect/src/garmin/types/wellness.ts\")",
+            "Bash(cp \"C:/Users/George/Documents/Projects/Eunoia/packages/garmin-connect/src/index.ts\" \"C:/Users/George/Documents/GitHub/garmin-connect/src/index.ts\")",
+            "Bash(npm install:*)",
+            "Bash(npm run:*)",
+            "Bash(find \"C:\\\\Users\\\\George\\\\Documents\\\\Projects\\\\Eunoia\\\\packages\\\\garmin-connect\\\\src\\\\garmin\\\\types\" -name \"*.ts\" -exec grep -l \"Badge\\\\|Gear\\\\|Device\" {} \\\\;)",
+            "mcp__bigbrain__workspace_create",
+            "Bash(git -C \"C:/Users/George/Documents/GitHub/garmin-connect\" branch -a)",
+            "Bash(git -C \"C:/Users/George/Documents/GitHub/garmin-connect\" log --oneline -20)",
+            "Bash(git -C \"C:/Users/George/Documents/GitHub/garmin-connect\" diff master..feature/wellness-api-mfa-support --stat)",
+            "mcp__bigbrain__task_create",
+            "Bash(grep -v \"//\")",
+            "WebFetch(domain:github.com)",
+            "Bash(npx tsc:*)"
+        ],
+        "additionalDirectories": [
+            "C:\\Users\\George\\Documents\\Projects\\Eunoia\\packages\\garmin-connect\\src\\garmin\\types"
+        ]
+    }
+}

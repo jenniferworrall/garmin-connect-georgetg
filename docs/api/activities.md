@@ -45,6 +45,71 @@ const details = await GCClient.getActivity({ activityId: latest.activityId });
 
 ---
 
+## getActivityExerciseSets
+
+For strength training activities, returns the per-set detail: repetitions,
+weight, rest periods, and Garmin's ML predictions for the movement
+performed in each set.
+
+```typescript
+getActivityExerciseSets(activityId: GCActivityId): Promise<IActivityExerciseSets>
+```
+
+```js
+const [latest] = await GCClient.getActivities(
+    0,
+    1,
+    undefined,
+    ActivitySubType.StrengthTraining
+);
+const { exerciseSets } = await GCClient.getActivityExerciseSets(
+    latest.activityId
+);
+
+const working = exerciseSets.filter((s) => s.setType === 'ACTIVE');
+for (const set of working) {
+    const top = set.exercises[0]; // highest-probability prediction
+    console.log(
+        `${top.name ?? top.category} — ${set.repetitionCount} reps @ ${
+            set.weight
+        }g`
+    );
+}
+```
+
+Each `exerciseSets[i].exercises` array is sorted descending by `probability`
+(0–100). `exercises[0]` is the detected movement; remaining entries are
+lower-confidence candidates. `category` values include `BENCH_PRESS`,
+`CURL`, `DEADLIFT`, `SHOULDER_PRESS`, `ROW`, `SQUAT`, `PULL_UP`,
+`TRICEPS_EXTENSION`, `LATERAL_RAISE`, `SIT_UP`, `CRUNCH`, `PUSH_UP`, and
+`UNKNOWN` — the watch may add more as firmware updates.
+
+---
+
+## getActivityDetails
+
+Returns the full activity details DTO: metric descriptors, per-sample
+metrics, heart-rate series, geo polyline (for outdoor activities), and
+pending-data flags. Currently typed as `unknown` — run with
+`GARMIN_DEBUG=1` to capture real payloads before writing against it.
+
+```typescript
+getActivityDetails(activityId: GCActivityId): Promise<unknown>
+```
+
+---
+
+## getActivitySplits
+
+Per-split / per-lap data. For strength activities, each `lapDTO` roughly
+corresponds to a set. Currently typed as `unknown`.
+
+```typescript
+getActivitySplits(activityId: GCActivityId): Promise<unknown>
+```
+
+---
+
 ## countActivities
 
 Get the lifetime count of activities.
