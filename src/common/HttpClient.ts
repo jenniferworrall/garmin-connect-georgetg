@@ -9,6 +9,8 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import OAuth from 'oauth-1.0a';
 import qs from 'qs';
+import * as fs from 'fs';
+import * as path from 'path';
 import { UrlClass } from '../garmin/UrlClass';
 import {
     IOauth1,
@@ -45,6 +47,42 @@ export interface MfaLoginState {
     csrf: string;
     signinUrl: string;
     cookies: string[];
+}
+
+function debugDump(
+    method: string,
+    url: string,
+    params: unknown,
+    data: unknown
+): void {
+    if (!process.env.GARMIN_DEBUG) return;
+    try {
+        const preview =
+            typeof data === 'string'
+                ? data.slice(0, 300)
+                : JSON.stringify(data)?.slice(0, 300);
+        // eslint-disable-next-line no-console
+        console.error(
+            `[garmin-debug] ${method} ${url}`,
+            params ? `params=${JSON.stringify(params)}` : '',
+            `\n  preview: ${preview}`
+        );
+        const dir =
+            process.env.GARMIN_DEBUG_DIR || path.resolve('.garmin-debug');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        const slug = url
+            .replace(/^https?:\/\//, '')
+            .replace(/[^a-zA-Z0-9]+/g, '_')
+            .slice(0, 120);
+        const file = path.join(dir, `${ts}_${method}_${slug}.json`);
+        fs.writeFileSync(
+            file,
+            JSON.stringify({ method, url, params, data }, null, 2)
+        );
+    } catch {
+        /* ignore debug errors */
+    }
 }
 
 export class HttpClient {
@@ -137,6 +175,7 @@ export class HttpClient {
 
     async get<T>(url: string, config?: AxiosRequestConfig<any>): Promise<T> {
         const response = await this.client.get<T>(url, config);
+        debugDump('GET', url, config?.params, response?.data);
         return response?.data;
     }
 

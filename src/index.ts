@@ -5,6 +5,7 @@ export type { MfaLoginState } from './common/HttpClient';
 export * from './garmin/types';
 export * from './garmin/types/wellness';
 export * from './garmin/types/activity';
+export * from './garmin/types/exerciseSet';
 export * from './garmin/types/sleep';
 export * from './garmin/types/weight';
 export * from './garmin/types/heartrate';

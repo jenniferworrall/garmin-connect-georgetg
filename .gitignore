@@ -24,5 +24,12 @@ dist
 # garmin credentials
 garmin.config.json
 
+# debug dumps
+.garmin-debug/
+
+# Claude Code local settings
+.claude/
+CLAUDE.md
+
 # tests
 test

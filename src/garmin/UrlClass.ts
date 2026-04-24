@@ -57,6 +57,15 @@ export class UrlClass {
     ACTIVITY_IMAGE_DELETE(activityId: GCActivityId, imageId: string) {
         return `${this.GC_API}/activity-service/activity/${activityId}/image/${imageId}`;
     }
+    ACTIVITY_EXERCISE_SETS(activityId: GCActivityId) {
+        return `${this.GC_API}/activity-service/activity/${activityId}/exerciseSets`;
+    }
+    ACTIVITY_DETAILS(activityId: GCActivityId) {
+        return `${this.GC_API}/activity-service/activity/${activityId}/details`;
+    }
+    ACTIVITY_SPLITS(activityId: GCActivityId) {
+        return `${this.GC_API}/activity-service/activity/${activityId}/splits`;
+    }
     get STAT_ACTIVITIES() {
         return `${this.GC_API}/fitnessstats-service/activity`;
     }

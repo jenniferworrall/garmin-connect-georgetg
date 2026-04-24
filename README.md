@@ -82,6 +82,18 @@ Runnable scripts are in [examples/](examples/):
 -   [wellness.js](examples/wellness.js) — daily summary, HRV, stress, body battery
 -   [workouts.js](examples/workouts.js) — list, create, schedule, delete workouts
 -   [social.js](examples/social.js) — connections, devices, news feed, badges
+-   [strength-probe.js](examples/strength-probe.js) — dump raw `exerciseSets` / `details` / `splits` payloads for strength training
+
+## Debugging
+
+Set `GARMIN_DEBUG=1` to log every HTTP GET to stderr and dump the full response to
+`./.garmin-debug/<timestamp>_GET_<slug>.json`. Override the directory with
+`GARMIN_DEBUG_DIR=/path/to/dumps`. Useful for capturing undocumented payload
+shapes before writing types against them.
+
+```bash
+GARMIN_DEBUG=1 node examples/strength-probe.js
+```
 
 ## Status
 
