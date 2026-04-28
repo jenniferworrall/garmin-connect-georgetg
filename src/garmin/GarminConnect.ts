@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import * as fs from 'fs';
 import * as path from 'path';
-import { HttpClient } from '../common/HttpClient';
+import { HttpClient, MfaLoginState } from '../common/HttpClient';
 import { checkIsDirectory, createDirectory, writeToFile } from '../utils';
 import { UrlClass } from './UrlClass';
 import {
@@ -118,8 +118,11 @@ export default class GarminConnect {
         return this;
     }
 
-    async resumeWithMfa(mfaCode: string): Promise<GarminConnect> {
-        await this.client.resumeWithMfa(mfaCode);
+    async resumeWithMfa(
+        loginState: MfaLoginState,
+        mfaCode: string
+    ): Promise<GarminConnect> {
+        await this.client.resumeWithMfa(loginState, mfaCode);
         return this;
     }
 
