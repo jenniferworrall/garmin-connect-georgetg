@@ -254,15 +254,15 @@ export class HttpClient {
      * @param mfaCode The 6-digit MFA code from authenticator app
      * @returns {Promise<HttpClient>}
      */
-    async resumeWithMfa(mfaCode: string): Promise<HttpClient> {
-        if (!this._mfaLoginState) {
+    async resumeWithMfa(loginState = this._mfaLoginState, mfaCode: string): Promise<HttpClient> {
+        if (!loginState) {
             throw new Error('No MFA login state — call login() first');
         }
         if (!this.OAUTH_CONSUMER) {
             await this.fetchOauthConsumer();
         }
 
-        const { csrf, signinUrl } = this._mfaLoginState;
+        const { csrf, signinUrl } = loginState;
 
         // Submit MFA verification code
         const mfaForm = new FormData();
@@ -280,6 +280,7 @@ export class HttpClient {
                 'User-Agent': USER_AGENT_BROWSER
             }
         });
+        console.log('MFA verification result:', mfaResult);
 
         const ticketRegResult = TICKET_RE.exec(mfaResult);
         if (!ticketRegResult) {
@@ -291,7 +292,10 @@ export class HttpClient {
         this._mfaLoginState = undefined;
 
         // Continue normal OAuth flow
+        console.log("About to get oauth1 token with ticket:", ticket);
         const oauth1 = await this.getOauth1Token(ticket);
+
+        console.log("Exchanging oauth1 token for oauth2 token...", oauth1);
         await this.exchange(oauth1);
         return this;
     }
