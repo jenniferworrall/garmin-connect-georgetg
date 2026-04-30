@@ -1,11 +1,6 @@
-import axios, {
-    AxiosInstance,
-    AxiosRequestConfig,
-    AxiosResponse,
-    RawAxiosRequestHeaders
-} from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
+import axios from 'axios';
 import { CookieJar } from 'tough-cookie';
+import { CurlClient, CurlMultiImpl, RequestOptions } from 'curl-cffi';
 
 import FormData from 'form-data';
 import _ from 'lodash';
@@ -89,8 +84,9 @@ function debugDump(
 }
 
 export class HttpClient {
-    client: AxiosInstance;
+    client: CurlClient;
     url: UrlClass;
+    jar: CookieJar;
     oauth1Token: IOauth1Token | undefined;
     oauth2Token: IOauth2Token | undefined;
     OAUTH_CONSUMER: IOauth1Consumer | undefined;
@@ -98,65 +94,10 @@ export class HttpClient {
 
     constructor(url: UrlClass) {
         this.url = url;
-        const jar = new CookieJar();
-        this.client = wrapper(axios.create({ jar }));
-        this.client.interceptors.response.use(
-            (response) => response,
-            async (error) => {
-                const originalRequest = error.config;
-                // console.log('originalRequest:', originalRequest)
-                // Auto Refresh token
-                if (
-                    error?.response?.status === 401 &&
-                    !originalRequest?._retry
-                ) {
-                    if (!this.oauth2Token) {
-                        return;
-                    }
-                    if (isRefreshing) {
-                        try {
-                            const token = await new Promise<string>(
-                                (resolve) => {
-                                    refreshSubscribers.push((token) => {
-                                        resolve(token);
-                                    });
-                                }
-                            );
-                            originalRequest.headers.Authorization = `Bearer ${token}`;
-                            return this.client(originalRequest);
-                        } catch (err) {
-                            console.log('err:', err);
-                            return Promise.reject(err);
-                        }
-                    }
-
-                    originalRequest._retry = true;
-                    isRefreshing = true;
-                    console.log('interceptors: refreshOauth2Token start');
-                    await this.refreshOauth2Token();
-                    console.log('interceptors: refreshOauth2Token end');
-                    isRefreshing = false;
-                    refreshSubscribers.forEach((subscriber) =>
-                        subscriber(this.oauth2Token!.access_token)
-                    );
-                    refreshSubscribers = [];
-                    originalRequest.headers.Authorization = `Bearer ${
-                        this.oauth2Token!.access_token
-                    }`;
-                    return this.client(originalRequest);
-                }
-                if (axios.isAxiosError(error)) {
-                    if (error?.response) this.handleError(error?.response);
-                }
-                throw error;
-            }
-        );
-        this.client.interceptors.request.use(async (config) => {
-            if (this.oauth2Token) {
-                config.headers.Authorization =
-                    'Bearer ' + this.oauth2Token.access_token;
-            }
-            return config;
+        this.jar = new CookieJar();
+        this.client = new CurlClient({
+            impl: new CurlMultiImpl(),
+            impersonate: 'chrome136'
         });
     }
 
@@ -177,57 +118,57 @@ export class HttpClient {
         }
     }
 
-    async get<T>(url: string, config?: AxiosRequestConfig<any>): Promise<T> {
-        const response = await this.client.get<T>(url, config);
-        debugDump('GET', url, config?.params, response?.data);
-        return response?.data;
-    }
+    async get(url: string, config?: RequestOptions): Promise<string> {
+        let status;
+        try {
+            if (this.oauth2Token) {
+                if (!config)
+                    config = {
+                        headers: {}
+                    };
 
-    async post<T>(
-        url: string,
-        data: any,
-        config?: AxiosRequestConfig<any>
-    ): Promise<T> {
-        const response = await this.client.post<T>(url, data, config);
-        return response?.data;
-    }
-
-    async put<T>(
-        url: string,
-        data: any,
-        config?: AxiosRequestConfig<any>
-    ): Promise<T> {
-        const response = await this.client.put<T>(url, data, config);
-        return response?.data;
-    }
-
-    async delete<T>(url: string, config?: AxiosRequestConfig<any>): Promise<T> {
-        const response = await this.client.post<T>(url, null, {
-            ...config,
-            headers: {
-                ...config?.headers,
-                'X-Http-Method-Override': 'DELETE'
+                config.headers = {
+                    Authorization: 'Bearer ' + this.oauth2Token.access_token,
+                    ...config.headers
+                };
             }
-        });
-        return response?.data;
+
+            const response = await this.client.get(url, config);
+            debugDump('GET', url, config?.params, response?.data);
+
+            status = response.status;
+            const str = response.text;
+            if (!str) {
+                throw new Error('No response on get');
+            }
+
+            return str;
+        } catch (error: any) {
+            this.handleError(error);
+        }
     }
 
-    setCommonHeader(headers: RawAxiosRequestHeaders): void {
-        _.each(headers, (headerValue, key) => {
-            this.client.defaults.headers.common[key] = headerValue;
-        });
+    async post(
+        url: string,
+        data: any,
+        config?: RequestOptions
+    ): Promise<string> {
+        const response = await this.client.post(url, data, config);
+        const str = response?.text;
+        if (!str) {
+            throw new Error('No response');
+        }
+
+        return str;
     }
 
-    handleError(response: AxiosResponse): void {
-        this.handleHttpError(response);
-    }
-
-    handleHttpError(response: AxiosResponse): void {
+    handleError(response: any): void {
         const { status, statusText, data } = response;
         const msg = `ERROR: (${status}), ${statusText}, ${JSON.stringify(
             data
         )}`;
         console.error(msg);
+
         throw new Error(msg);
     }
 
@@ -254,7 +195,10 @@ export class HttpClient {
      * @param mfaCode The 6-digit MFA code from authenticator app
      * @returns {Promise<HttpClient>}
      */
-    async resumeWithMfa(loginState = this._mfaLoginState, mfaCode: string): Promise<HttpClient> {
+    async resumeWithMfa(
+        loginState = this._mfaLoginState,
+        mfaCode: string
+    ): Promise<HttpClient> {
         if (!loginState) {
             throw new Error('No MFA login state — call login() first');
         }
@@ -271,10 +215,9 @@ export class HttpClient {
         mfaForm.append('_csrf', csrf);
         mfaForm.append('fromPage', 'setupEnterMfaCode');
 
-        const mfaResult = await this.post<string>(signinUrl, mfaForm, {
+        const mfaResult = await this.post(signinUrl, mfaForm, {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                Dnt: 1,
                 Origin: this.url.GARMIN_SSO_ORIGIN,
                 Referer: signinUrl,
                 'User-Agent': USER_AGENT_BROWSER
@@ -292,10 +235,10 @@ export class HttpClient {
         this._mfaLoginState = undefined;
 
         // Continue normal OAuth flow
-        console.log("About to get oauth1 token with ticket:", ticket);
+        console.log('About to get oauth1 token with ticket:', ticket);
         const oauth1 = await this.getOauth1Token(ticket);
 
-        console.log("Exchanging oauth1 token for oauth2 token...", oauth1);
+        console.log('Exchanging oauth1 token for oauth2 token...', oauth1);
         await this.exchange(oauth1);
         return this;
     }
@@ -325,7 +268,7 @@ export class HttpClient {
         };
         const step2Url = `${this.url.SIGNIN_URL}?${qs.stringify(step2Params)}`;
         console.log('login - step2Url:', step2Url);
-        const step2Result = await this.get<string>(step2Url);
+        const step2Result = await this.get(step2Url);
         console.log('login - step2Result:', step2Result);
         const csrfRegResult = CSRF_RE.exec(step2Result);
         if (!csrfRegResult) {
@@ -358,13 +301,12 @@ export class HttpClient {
 
         const headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Dnt: 1,
             Origin: this.url.GARMIN_SSO_ORIGIN,
             Referer: this.url.SIGNIN_URL,
             'User-Agent': USER_AGENT_BROWSER
         };
         console.log('Headers', headers);
-        const step3Result = await this.post<string>(step3Url, step3Form, {
+        const step3Result = await this.post(step3Url, step3Form, {
             headers
         });
         console.log('step3Result:', step3Result);
@@ -472,7 +414,7 @@ export class HttpClient {
         const headers = oauth.toHeader(oauth.authorize(step4RequestData));
         // console.log('getOauth1Token - headers:', headers);
 
-        const response = await this.get<string>(url, {
+        const response = await this.get(url, {
             headers: {
                 ...headers,
                 'User-Agent': USER_AGENT_CONNECTMOBILE
@@ -518,7 +460,7 @@ export class HttpClient {
         const url = `${baseUrl}?${qs.stringify(step5AuthData)}`;
         // console.log('exchange - url:', url);
         this.oauth2Token = undefined;
-        const response = await this.post<IOauth2Token>(url, null, {
+        const response = await this.post(url, null, {
             headers: {
                 'User-Agent': USER_AGENT_CONNECTMOBILE,
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -529,7 +471,7 @@ export class HttpClient {
         // console.log('exchange - oauth2Token:', this.oauth2Token);
     }
 
-    setOauth2TokenExpiresAt(token: IOauth2Token): IOauth2Token {
+    setOauth2TokenExpiresAt(token: any): any {
         // human readable date
         token['last_update_date'] = DateTime.now().toLocal().toString();
         token['expires_date'] = DateTime.fromSeconds(
