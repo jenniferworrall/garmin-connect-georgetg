@@ -10,17 +10,12 @@ import { checkIsDirectory, createDirectory, writeToFile } from '../utils';
 import { UrlClass } from './UrlClass';
 import {
     ExportFileTypeValue,
-    GCBadgeId,
     GCUserHash,
-    Gear,
     GarminDomain,
-    IBadge,
     ICountActivities,
-    IDailyStepsType,
     IGarminTokens,
     IOauth1Token,
     IOauth2Token,
-    ISocialConnections,
     ISocialProfile,
     IUserSettings,
     IWorkout,
@@ -37,8 +32,6 @@ import {
 import { SleepData } from './types/sleep';
 import { WeightData, UpdateWeight } from './types/weight';
 import { HeartRate } from './types/heartrate';
-import { HydrationData, WaterIntake } from './types/hydration';
-import { GolfSummary, GolfScorecard } from './types/golf';
 import { gramsToPounds } from './common/WeightUtils';
 import { convertMLToOunces, convertOuncesToML } from './common/HydrationUtils';
 import {
@@ -186,11 +179,11 @@ export default class GarminConnect {
     }
 
     async getUserSettings(): Promise<IUserSettings> {
-        return this.client.get<IUserSettings>(this.url.USER_SETTINGS);
+        return this.client.get(this.url.USER_SETTINGS);
     }
 
     async getUserProfile(): Promise<ISocialProfile> {
-        return this.client.get<ISocialProfile>(this.url.USER_PROFILE);
+        return this.client.get(this.url.USER_PROFILE);
     }
 
     async getActivities(
@@ -199,7 +192,7 @@ export default class GarminConnect {
         activityType?: ActivityType,
         subActivityType?: ActivitySubType
     ): Promise<IActivity[]> {
-        return this.client.get<IActivity[]>(this.url.ACTIVITIES, {
+        return this.client.get(this.url.ACTIVITIES, {
             params: { start, limit, activityType, subActivityType }
         });
     }
@@ -208,9 +201,7 @@ export default class GarminConnect {
         activityId: GCActivityId;
     }): Promise<IActivity> {
         if (!activity.activityId) throw new Error('Missing activityId');
-        return this.client.get<IActivity>(
-            this.url.ACTIVITY + activity.activityId
-        );
+        return this.client.get(this.url.ACTIVITY + activity.activityId);
     }
 
     /**
@@ -228,9 +219,7 @@ export default class GarminConnect {
         activityId: GCActivityId
     ): Promise<IActivityExerciseSets> {
         if (!activityId) throw new Error('Missing activityId');
-        return this.client.get<IActivityExerciseSets>(
-            this.url.ACTIVITY_EXERCISE_SETS(activityId)
-        );
+        return this.client.get(this.url.ACTIVITY_EXERCISE_SETS(activityId));
     }
 
     /**
@@ -239,7 +228,7 @@ export default class GarminConnect {
      */
     async getActivityDetails(activityId: GCActivityId): Promise<unknown> {
         if (!activityId) throw new Error('Missing activityId');
-        return this.client.get<unknown>(this.url.ACTIVITY_DETAILS(activityId));
+        return this.client.get(this.url.ACTIVITY_DETAILS(activityId));
     }
 
     /**
@@ -247,11 +236,11 @@ export default class GarminConnect {
      */
     async getActivitySplits(activityId: GCActivityId): Promise<unknown> {
         if (!activityId) throw new Error('Missing activityId');
-        return this.client.get<unknown>(this.url.ACTIVITY_SPLITS(activityId));
+        return this.client.get(this.url.ACTIVITY_SPLITS(activityId));
     }
 
     async countActivities(): Promise<ICountActivities> {
-        return this.client.get<ICountActivities>(this.url.STAT_ACTIVITIES, {
+        return this.client.get(this.url.STAT_ACTIVITIES, {
             params: {
                 aggregation: 'lifetime',
                 startDate: '1970-01-01',
@@ -284,10 +273,12 @@ export default class GarminConnect {
                 this.url.DOWNLOAD_KML + activity.activityId
             );
         } else if (type === 'zip') {
-            fileBuffer = await this.client.get<Buffer>(
+            fileBuffer = await this.client.get(
                 this.url.DOWNLOAD_ZIP + activity.activityId,
                 {
-                    responseType: 'arraybuffer'
+                    params: {
+                        responseType: 'arraybuffer'
+                    }
                 }
             );
         } else {
@@ -325,13 +316,6 @@ export default class GarminConnect {
         return response;
     }
 
-    async deleteActivity(activity: {
-        activityId: GCActivityId;
-    }): Promise<void> {
-        if (!activity.activityId) throw new Error('Missing activityId');
-        await this.client.delete<void>(this.url.ACTIVITY + activity.activityId);
-    }
-
     async uploadImage(
         activity: { activityId: GCActivityId },
         file: string
@@ -353,26 +337,8 @@ export default class GarminConnect {
         );
     }
 
-    async deleteImage(
-        activity: { activityId: GCActivityId },
-        imageId: string
-    ): Promise<void> {
-        if (!activity.activityId) throw new Error('Missing activityId');
-        await this.client.delete<void>(
-            this.url.ACTIVITY_IMAGE_DELETE(activity.activityId, imageId)
-        );
-    }
-
-    async updateActivity(activity: IActivity): Promise<IActivity> {
-        if (!activity.activityId) throw new Error('Missing activityId');
-        return this.client.put<IActivity>(
-            this.url.ACTIVITY + activity.activityId,
-            activity
-        );
-    }
-
     async getWorkouts(start: number, limit: number): Promise<IWorkout[]> {
-        return this.client.get<IWorkout[]>(this.url.WORKOUTS, {
+        return this.client.get(this.url.WORKOUTS, {
             params: {
                 start,
                 limit
@@ -383,9 +349,7 @@ export default class GarminConnect {
         workoutId: string;
     }): Promise<IWorkoutDetail> {
         if (!workout.workoutId) throw new Error('Missing workoutId');
-        return this.client.get<IWorkoutDetail>(
-            this.url.WORKOUT(workout.workoutId)
-        );
+        return this.client.get(this.url.WORKOUT(workout.workoutId));
     }
 
     async addWorkout(
@@ -399,10 +363,7 @@ export default class GarminConnect {
                 if (!data.description) {
                     data.description = 'Added by garmin-connect for Node.js';
                 }
-                return this.client.post<IWorkoutDetail>(
-                    this.url.WORKOUT(),
-                    data
-                );
+                return this.client.post(this.url.WORKOUT(), data);
             }
         }
 
@@ -417,7 +378,7 @@ export default class GarminConnect {
             newWorkout.description = 'Added by garmin-connect for Node.js';
         }
         // console.log('addWorkout - newWorkout:', newWorkout)
-        return this.client.post<IWorkoutDetail>(this.url.WORKOUT(), newWorkout);
+        return this.client.post(this.url.WORKOUT(), newWorkout);
     }
 
     async addRunningWorkout(
@@ -430,11 +391,6 @@ export default class GarminConnect {
         running.distance = meters;
         running.description = description;
         return this.addWorkout(running);
-    }
-
-    async deleteWorkout(workout: { workoutId: string }) {
-        if (!workout.workoutId) throw new Error('Missing workout');
-        return this.client.delete(this.url.WORKOUT(workout.workoutId));
     }
 
     async scheduleWorkout(
@@ -451,11 +407,12 @@ export default class GarminConnect {
     async getSteps(date = new Date()): Promise<number> {
         const dateString = toDateString(date);
 
-        const days = await this.client.get<IDailyStepsType[]>(
+        const days = await this.client.get(
             `${this.url.DAILY_STEPS}${dateString}/${dateString}`
         );
         const dayStats = days.find(
-            ({ calendarDate }) => calendarDate === dateString
+            ({ calendarDate }: { calendarDate: string }) =>
+                calendarDate === dateString
         );
 
         if (!dayStats) {
@@ -469,10 +426,9 @@ export default class GarminConnect {
         try {
             const dateString = toDateString(date);
 
-            const sleepData = await this.client.get<SleepData>(
-                `${this.url.DAILY_SLEEP}`,
-                { params: { date: dateString } }
-            );
+            const sleepData = await this.client.get(`${this.url.DAILY_SLEEP}`, {
+                params: { date: dateString }
+            });
 
             if (!sleepData) {
                 throw new Error('Invalid or empty sleep data response.');
@@ -523,7 +479,7 @@ export default class GarminConnect {
     async getDailyWeightData(date = new Date()): Promise<WeightData> {
         try {
             const dateString = toDateString(date);
-            const weightData = await this.client.get<WeightData>(
+            const weightData = await this.client.get(
                 `${this.url.DAILY_WEIGHT}/${dateString}`
             );
 
@@ -553,7 +509,7 @@ export default class GarminConnect {
     async getDailyHydration(date = new Date()): Promise<number> {
         try {
             const dateString = toDateString(date);
-            const hydrationData = await this.client.get<HydrationData>(
+            const hydrationData = await this.client.get(
                 `${this.url.DAILY_HYDRATION}/${dateString}`
             );
 
@@ -573,7 +529,7 @@ export default class GarminConnect {
         timezone: string
     ): Promise<UpdateWeight> {
         try {
-            const weightData = await this.client.post<UpdateWeight>(
+            const weightData = await this.client.post(
                 `${this.url.UPDATE_WEIGHT}`,
                 {
                     dateTimestamp: getLocalTimestamp(date, timezone),
@@ -589,69 +545,10 @@ export default class GarminConnect {
         }
     }
 
-    async updateHydrationLogOunces(
-        date = new Date(),
-        valueInOz: number
-    ): Promise<WaterIntake> {
-        try {
-            const dateString = toDateString(date);
-            const hydrationData = await this.client.put<WaterIntake>(
-                `${this.url.HYDRATION_LOG}`,
-                {
-                    calendarDate: dateString,
-                    valueInML: convertOuncesToML(valueInOz),
-                    userProfileId: (await this.getUserProfile()).profileId,
-                    timestampLocal: date.toISOString().substring(0, 23)
-                }
-            );
-
-            return hydrationData;
-        } catch (error: any) {
-            throw new Error(
-                `Error in updateHydrationLogOunces: ${error.message}`
-            );
-        }
-    }
-
-    async getGolfSummary(): Promise<GolfSummary> {
-        try {
-            const golfSummary = await this.client.get<GolfSummary>(
-                `${this.url.GOLF_SCORECARD_SUMMARY}`
-            );
-
-            if (!golfSummary) {
-                throw new Error('Invalid or empty golf summary data response.');
-            }
-
-            return golfSummary;
-        } catch (error: any) {
-            throw new Error(`Error in getGolfSummary: ${error.message}`);
-        }
-    }
-
-    async getGolfScorecard(scorecardId: number): Promise<GolfScorecard> {
-        try {
-            const golfScorecard = await this.client.get<GolfScorecard>(
-                `${this.url.GOLF_SCORECARD_DETAIL}`,
-                { params: { 'scorecard-ids': scorecardId } }
-            );
-
-            if (!golfScorecard) {
-                throw new Error(
-                    'Invalid or empty golf scorecard data response.'
-                );
-            }
-
-            return golfScorecard;
-        } catch (error: any) {
-            throw new Error(`Error in getGolfScorecard: ${error.message}`);
-        }
-    }
-
     async getHeartRate(date = new Date()): Promise<HeartRate> {
         try {
             const dateString = toDateString(date);
-            const heartRate = await this.client.get<HeartRate>(
+            const heartRate = await this.client.get(
                 `${this.url.DAILY_HEART_RATE}`,
                 { params: { date: dateString } }
             );
@@ -667,10 +564,9 @@ export default class GarminConnect {
     async getUserSummary(date = new Date()): Promise<IUserSummary> {
         const dateString = toDateString(date);
         const displayName = await this.getDisplayName();
-        return this.client.get<IUserSummary>(
-            `${this.url.USER_SUMMARY}/${displayName}`,
-            { params: { calendarDate: dateString, _: Date.now() } }
-        );
+        return this.client.get(`${this.url.USER_SUMMARY}/${displayName}`, {
+            params: { calendarDate: dateString, _: Date.now() }
+        });
     }
 
     async getBodyComposition(
@@ -681,22 +577,19 @@ export default class GarminConnect {
             typeof startDate === 'string' ? startDate : toDateString(startDate);
         const end =
             typeof endDate === 'string' ? endDate : toDateString(endDate);
-        return this.client.get<IBodyCompositionData>(
-            this.url.BODY_COMPOSITION,
-            { params: { startDate: start, endDate: end } }
-        );
+        return this.client.get(this.url.BODY_COMPOSITION, {
+            params: { startDate: start, endDate: end }
+        });
     }
 
     async getHrvData(date = new Date()): Promise<IHrvData> {
         const dateString = toDateString(date);
-        return this.client.get<IHrvData>(`${this.url.HRV}/${dateString}`);
+        return this.client.get(`${this.url.HRV}/${dateString}`);
     }
 
     async getStressData(date = new Date()): Promise<IStressData> {
         const dateString = toDateString(date);
-        return this.client.get<IStressData>(
-            `${this.url.DAILY_STRESS}/${dateString}`
-        );
+        return this.client.get(`${this.url.DAILY_STRESS}/${dateString}`);
     }
 
     async getBodyBattery(
@@ -707,96 +600,29 @@ export default class GarminConnect {
             typeof startDate === 'string' ? startDate : toDateString(startDate);
         const end =
             typeof endDate === 'string' ? endDate : toDateString(endDate);
-        return this.client.get<IBodyBatteryData[]>(this.url.BODY_BATTERY, {
+        return this.client.get(this.url.BODY_BATTERY, {
             params: { startDate: start, endDate: end }
         });
     }
 
     async getSpO2Data(date = new Date()): Promise<ISpO2Data> {
         const dateString = toDateString(date);
-        return this.client.get<ISpO2Data>(`${this.url.SPO2}/${dateString}`);
+        return this.client.get(`${this.url.SPO2}/${dateString}`);
     }
 
     async getFitnessAge(date = new Date()): Promise<IFitnessAgeData> {
         const dateString = toDateString(date);
-        return this.client.get<IFitnessAgeData>(
-            `${this.url.FITNESS_AGE}/${dateString}`
-        );
+        return this.client.get(`${this.url.FITNESS_AGE}/${dateString}`);
     }
 
     async getEnduranceScore(date = new Date()): Promise<IEnduranceScoreData> {
         const dateString = toDateString(date);
-        return this.client.get<IEnduranceScoreData>(
-            `${this.url.ENDURANCE_SCORE}/${dateString}`
-        );
+        return this.client.get(`${this.url.ENDURANCE_SCORE}/${dateString}`);
     }
 
     async getRespirationData(date = new Date()): Promise<IRespirationData> {
         const dateString = toDateString(date);
-        return this.client.get<IRespirationData>(
-            `${this.url.RESPIRATION}/${dateString}`
-        );
-    }
-
-    // ─── Badge Methods ───────────────────────────────────────────
-
-    async getBadgesEarned(): Promise<IBadge[]> {
-        return this.client.get<IBadge[]>(this.url.BADGES_EARNED);
-    }
-
-    async getBadgesAvailable(): Promise<IBadge[]> {
-        return this.client.get<IBadge[]>(this.url.BADGES_AVAILABLE);
-    }
-
-    async getBadgeDetail(badgeId: GCBadgeId): Promise<IBadge> {
-        if (!badgeId) throw new Error('Missing badgeId');
-        return this.client.get<IBadge>(this.url.BADGE_DETAIL(badgeId));
-    }
-
-    // ─── Gear Methods ────────────────────────────────────────────
-
-    async getGear(userProfilePk: number): Promise<Gear[]> {
-        return this.client.get<Gear[]>(this.url.GEAR(userProfilePk));
-    }
-
-    async linkGearToActivity(
-        activityId: GCActivityId,
-        gearUuid: string
-    ): Promise<Gear> {
-        return this.client.put<Gear>(
-            this.url.LINK_GEAR(gearUuid, activityId),
-            {}
-        );
-    }
-
-    async unlinkGearFromActivity(
-        activityId: GCActivityId,
-        gearUuid: string
-    ): Promise<Gear> {
-        return this.client.put<Gear>(
-            this.url.UNLINK_GEAR(gearUuid, activityId),
-            {}
-        );
-    }
-
-    // ─── Social / Device Methods ─────────────────────────────────
-
-    async getSocialConnections(): Promise<ISocialConnections> {
-        const displayName = await this.getDisplayName();
-        return this.client.get<ISocialConnections>(
-            this.url.SOCIAL_CONNECTIONS(displayName)
-        );
-    }
-
-    async getDeviceInfo(): Promise<any[]> {
-        const displayName = await this.getDisplayName();
-        return this.client.get<any[]>(this.url.DEVICE_INFO(displayName));
-    }
-
-    async getNewsFeed(start?: number, limit?: number): Promise<any[]> {
-        return this.client.get<any[]>(this.url.NEWS_FEED, {
-            params: { start, limit }
-        });
+        return this.client.get(`${this.url.RESPIRATION}/${dateString}`);
     }
 
     // ─── Generic Methods ─────────────────────────────────────────
@@ -807,12 +633,7 @@ export default class GarminConnect {
     }
 
     async post<T>(url: string, data: any) {
-        const response = await this.client.post<T>(url, data, {});
-        return response as T;
-    }
-
-    async put<T>(url: string, data: any) {
-        const response = await this.client.put<T>(url, data, {});
+        const response = await this.client.post(url, data, {});
         return response as T;
     }
 }

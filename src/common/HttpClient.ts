@@ -118,7 +118,7 @@ export class HttpClient {
         }
     }
 
-    async get(url: string, config?: RequestOptions): Promise<string> {
+    async get(url: string, config?: RequestOptions): Promise<any> {
         let status;
         try {
             if (this.oauth2Token) {
@@ -137,7 +137,7 @@ export class HttpClient {
             debugDump('GET', url, config?.params, response?.data);
 
             status = response.status;
-            const str = response.text;
+            const str = response.data;
             if (!str) {
                 throw new Error('No response on get');
             }
@@ -148,13 +148,9 @@ export class HttpClient {
         }
     }
 
-    async post(
-        url: string,
-        data: any,
-        config?: RequestOptions
-    ): Promise<string> {
+    async post(url: string, data: any, config?: RequestOptions): Promise<any> {
         const response = await this.client.post(url, data, config);
-        const str = response?.text;
+        const str = response?.data;
         if (!str) {
             throw new Error('No response');
         }
